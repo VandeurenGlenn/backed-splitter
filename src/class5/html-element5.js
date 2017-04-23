@@ -9,17 +9,59 @@ export default class HTMLElement5 {
     this.value = value;
   }
 
+  get tagName() {
+    return this.value.tagName;
+  }
+
   get childNodes() {
     return this.value.content ? this.value.content.childNodes : this.value.childNodes;
   }
 
+  set childNodes(value) {
+    const _value = this.value;
+    if (_value.content ) _value.content.childNodes = value;
+    else _value.childNodes = value;
+  }
+
+  hasTagName(name) {
+    return this.value.tagName === name;
+  }
+
   getInnerHTML(children, content) {
-    for (let child of children) {
-      if (child.value) {
-        content += child.value;
-      } else if (child.childNodes.length > 0) {
-        content = this.getInnerHTML(child.childNodes, content);
-      }
+    if (children) {
+
+        for (let child of children) {
+          if (this.isTextNode(child) && !child.value.includes('\n')) {
+            content += child.value;
+          } else if (this.isTextNode(child)) {
+            content += child.value;
+          } else {
+            let endTag = true;
+            const tagName = child.tagName;
+            switch (tagName) {
+              case 'link':
+              case 'img':
+                endTag = false;
+                break;
+            }
+            if (child.value) {
+              content += `<${tagName}>${child.value}${endTag ? `</${tagName}>` : ''}`;
+            } else if (child.content || child.tagName === 'link' || child.childNodes && child.childNodes.length > 0) {
+              // when a document, return head, body & head also
+              if (child.tagName === 'body' || child.tagName === 'html' || child.tagName === 'head') {
+                if (this.isDocument) {
+                  content += new HTMLElement5(child).outerHTML;
+                }
+                content = this.getInnerHTML(child.childNodes, content);
+              } else {
+                content += new HTMLElement5(child).outerHTML;
+              }
+            } else if (child.childNodes && child.childNodes.length === 0) {
+              // console.log(child);
+            }
+          }
+
+        }
     }
     return content;
   }
@@ -90,10 +132,19 @@ export default class HTMLElement5 {
 
   serializeAttributes() {
     let attributes = '';
-    for (let attr of this.value.attrs) {
-      attributes += ` ${this.serializeAttribute(attr.name, attr.value)}`;
+    if (this.value.attrs) {
+      for (let attr of this.value.attrs) {
+        attributes += ` ${this.serializeAttribute(attr.name, attr.value)}`;
+      }
     }
     return attributes;
+  }
+
+  appendChild(node) {
+    let childNodes = this.childNodes;
+    childNodes.push(node);
+    this.childNodes = childNodes;
+    return this.childNodes;
   }
 
   removeChild(node) {

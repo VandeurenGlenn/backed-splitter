@@ -3,6 +3,7 @@ import {parse} from 'parse5';
 import * as dom5 from 'dom5';
 import path from 'path';
 import promiseContent from './promise-content';
+import scriptToImport from './script-to-import';
 import promisePaths from './promise-paths';
 import Link from './class5/link5.js';
 import Script from './class5/script5.js';
@@ -17,6 +18,7 @@ const bundle = {
   js: '',
   css: '',
   imports: [],
+  scripts: [],
   bundleHref: null
 }
 
@@ -103,6 +105,11 @@ const constructContent = (items = [], location = null) => {
             const source = path.join(location, isLink ? href : rel);
             // get file content
             content = await promiseContent(source);
+            const {contents, scripts} = await scriptToImport(content, source)
+            content = contents;
+            if (scripts) {
+              bundle.scripts = [...bundle.scripts, ...scripts]
+            }
 
             if (isLink) {
               const dirname = await promisePaths(source);
@@ -112,14 +119,13 @@ const constructContent = (items = [], location = null) => {
           } else {
             await handleScript(item);
           }
-
           if (rel === 'import') {
             bundle.html += content;
           } else if (rel === 'stylesheet'){
             bundle.css += content;
           }
         }
-        resolve()
+        resolve(bundle)
       } catch (error) {
         reject(error)
       }
