@@ -105,11 +105,7 @@ const constructContent = (items = [], location = null) => {
             const source = path.join(location, isLink ? href : rel);
             // get file content
             content = await promiseContent(source);
-            const {contents, scripts} = await scriptToImport(content, source)
-            content = contents;
-            if (scripts) {
-              bundle.scripts.push(scripts);
-            }
+            content = await scriptToImport(content, source);
 
             if (isLink) {
               const dirname = await promisePaths(source);
