@@ -42,7 +42,7 @@ export default (content, location) => {
           // await promisWrite(file.path, file.innerHTML);
           if (calls !== 1) {
             doc.removeChild(script)
-            doc.appendChild({nodeName: 'script', tagName: 'script', value: `import ${file.name} from ${file.path}`})
+            doc.appendChild({nodeName: 'script', tagName: 'script', value: `import ${file.name} from '${file.path}';\n  `})
           }
           content = doc.innerHTML;
         }
