@@ -108,7 +108,7 @@ const constructContent = (items = [], location = null) => {
             const {contents, scripts} = await scriptToImport(content, source)
             content = contents;
             if (scripts) {
-              bundle.scripts = [...bundle.scripts, ...scripts]
+              bundle.scripts.push(scripts);
             }
 
             if (isLink) {
