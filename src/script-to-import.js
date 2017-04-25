@@ -37,6 +37,7 @@ export default (content, location) => {
               file.innerHTML = script.getInnerHTML(child.childNodes, innerHTML);
             }
           }
+          file.path = file.path.replace(new RegExp(/\\/, 'g'), '/')
           scripts.push({path: file.path, contents: file.innerHTML});
           // TODO: create cli for writing rsults
           // await promisWrite(file.path, file.innerHTML);
