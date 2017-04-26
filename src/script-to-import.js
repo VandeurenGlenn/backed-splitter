@@ -7,7 +7,7 @@ import path from 'path';
 import utils from './../node_modules/backed-utils/dist/utils-es.js';
 
 let calls = 0;
-let scripts = [];
+let scripts = {};
 const queryScript = el => {
   const tagName = el.tagName;
   if (tagName && tagName === 'script') {
@@ -38,7 +38,7 @@ export default (content, location) => {
             }
           }
           file.path = file.path.replace(new RegExp(/\\/, 'g'), '/')
-          scripts.push({path: file.path, contents: file.innerHTML});
+          scripts[file.path] = file.innerHTML;
           // TODO: create cli for writing rsults
           // await promisWrite(file.path, file.innerHTML);
           if (calls !== 1) {
