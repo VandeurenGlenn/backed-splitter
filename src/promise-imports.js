@@ -8,6 +8,7 @@ import promisePaths from './promise-paths';
 import Link from './class5/link5.js';
 import Script from './class5/script5.js';
 import HTMLElement5 from './class5/html-element5.js';
+import {readFileSync} from 'fs';
 
 let _set = [];
 let _js = [];
@@ -19,6 +20,7 @@ const bundle = {
   css: '',
   imports: [],
   scripts: [],
+  importees: {},
   bundleHref: null
 }
 
@@ -64,11 +66,66 @@ const collect = source => {
     resolve(dom5.queryAll(parse(source), rules) )
   });
 }
+let calls = 0;
+const handleScript = (target, entry) => {
+  return new Promise((resolve, reject) => {
+    let imports = [];
+    let comments = [];
+    let script = {};
+    if (target.nodeName) {
+      script = new Script(target);
+      imports = script.innerHTML.match(new RegExp(`import (.*)`, 'g'))
+  		comments = script.innerHTML.match(new RegExp(`// import (.*)`,'g'));
+    } else {
+      imports = target.match(new RegExp(`import (.*)`, 'g'))
+  		comments = target.match(new RegExp(`// import (.*)`,'g'));
+    }
+		if (imports) {
+      if (imports.length > 0 && comments && comments.length > 0) {
+  			for (let commentedImport of comments) {
+  				commentedImport = commentedImport.match(new RegExp(`import (.*)`, 'g'))
+  				let index = imports.indexOf(commentedImport[0]);
+  				if (index > -1) {
+  					imports.splice(index, 1);
+  				}
+  			}
+  		}
+  		if (imports.length > 0) {
+  			for (let imp of imports) {
+  				let hadExt = true;
+  				var id = imp.match(new RegExp(/'(.*)/, 'g'))
+  				id = id[0].slice(1, id[0].length - 2)
+  				// id = id.replace(new RegExp())
+  				if (!id.includes('.js')) {
+  					id += '.js';
+  					hadExt = false;
+  				}
+          if (!bundle.scripts[id]) {
+    				try {
+    					let contents = readFileSync(path.join(entry, id.replace('./', '')), 'utf-8')
+              handleScript(contents, path.join(entry, path.dirname(id)));
+    					// bundle.js += contents;
+    					if (!hadExt) {
+    						id = id.replace('.js', '');
+    					}
+              bundle.importees[id] = contents;
+    						// bundle.scripts[id] = contents;
+    				} catch (e) {
+    					console.error(e);
+    				}
+          }
+  			}
 
-const handleScript = target => {
-  const script = new Script(target);
-  bundle.js += script.innerHTML;
-  _js.push(target);
+  			resolve();
+  		}
+    }
+
+    if (script && script.innerHTML) {
+      bundle.js += script.innerHTML;
+      _js.push(target);
+      resolve();
+    }
+  });
 }
 
 const removeScripts = (html, scripts) => {
@@ -89,7 +146,7 @@ const removeScripts = (html, scripts) => {
   return html;
 }
 
-const constructContent = (items = [], location = null) => {
+const constructContent = (items = [], location = null, entry = null) => {
   return new Promise((resolve, reject) => {
     async function run() {
       try {
@@ -114,10 +171,10 @@ const constructContent = (items = [], location = null) => {
             if (isLink) {
               const dirname = await promisePaths(source);
               const collection = await collect(content);
-              await constructContent(collection, dirname);
+              await constructContent(collection, dirname, entry);
             }
           } else {
-            await handleScript(item);
+            await handleScript(item, entry);
           }
           if (rel === 'import') {
             bundle.html += content;
@@ -134,11 +191,11 @@ const constructContent = (items = [], location = null) => {
   });
 }
 
-const promiseImports = (content = null, location = null) => {
+const promiseImports = (content = null, location = null, entry = null) => {
   async function run() {
     try {
       const collection = await collect(content);
-      await constructContent(collection, location);
+      await constructContent(collection, location, entry);
       bundle.html = await removeScripts(bundle.html, _js);
       return bundle;
     } catch (error) {
@@ -148,6 +205,6 @@ const promiseImports = (content = null, location = null) => {
   return run();
 }
 
-export default (content = null, location = null, verbose = false) => {
-  return promiseImports(content, location)
+export default ({content = null, dirname = null, entry = null}, verbose = false) => {
+  return promiseImports(content, dirname, path.dirname(entry))
 }
