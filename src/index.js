@@ -21,7 +21,7 @@ export default ({entry = null}) => {
       try {
         const content = await promiseContent(entry);
         const dirname = await promisePaths(entry);
-        const {html, js, css, imports, bundleHref, scripts} = await promiseImports(content, dirname);
+        const {html, js, css, imports, bundleHref, scripts, importees} = await promiseImports({content: content, entry: entry, dirname: dirname});
 
         let index = await promiseHTML(content, imports);
         let app = await promiseHTML(html, imports);
@@ -29,7 +29,7 @@ export default ({entry = null}) => {
         index = await promiseWriteLinks(index, bundleHref, Boolean(js), Boolean(css));
 
         // scripts contains the splitted script files
-        resolve({app: app, index: index, js: js, css: css, scripts: scripts});
+        resolve({app: app, index: index, js: js, css: css, scripts: scripts, imports: importees, bundleHref: bundleHref});
       } catch (error) {
         throw console.error(error);
       }
