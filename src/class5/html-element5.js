@@ -29,7 +29,6 @@ export default class HTMLElement5 {
 
   getInnerHTML(children, content) {
     if (children) {
-
         for (let child of children) {
           if (this.isTextNode(child) && !child.value.includes('\n')) {
             content += child.value;
@@ -57,7 +56,7 @@ export default class HTMLElement5 {
                 content += new HTMLElement5(child).outerHTML;
               }
             } else if (child.childNodes && child.childNodes.length === 0) {
-              // console.log(child);
+              content += new HTMLElement5(child).outerHTML;
             }
           }
 
