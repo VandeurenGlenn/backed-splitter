@@ -11,8 +11,8 @@ let scripts = {};
 const queryScript = el => {
   const tagName = el.tagName;
   if (tagName && tagName === 'script') {
-    el = new HTMLElement5(el);
-    if (!el.hasAttribute('src')) return el;
+    const attrs = el.attrs;
+    if (attrs.length < 1 || attrs && attrs[0].name !== 'src') return el;
   }
 }
 
@@ -47,7 +47,6 @@ export default (content, location) => {
           }
           content = doc.innerHTML;
         }
-
         resolve({contents: content, scripts: scripts});
       } catch (error) {
         reject(error);
