@@ -1,6 +1,6 @@
 {
   "name": "backed-splitter",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "repository": "https://github.com/VandeurenGlenn/backed-crisper.git",
   "author": "Glenn Vandeuren <vandeurenglenn@gmail.com>",
   "scripts": {
