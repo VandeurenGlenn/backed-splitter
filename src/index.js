@@ -11,7 +11,7 @@ import promiseWriteLinks from './promise-write-links';
  *
  * @param {string} entry The file to read
  */
-export default ({entry = null}) => {
+export default ({entry = null, exclude = ['bower_components/**/*', '**/*.css'], include = ''}) => {
   return new Promise((resolve, reject) => {
     if (entry === null) {
       return console.warn('entry::undefined');
@@ -21,7 +21,7 @@ export default ({entry = null}) => {
       try {
         const content = await promiseContent(entry);
         const dirname = await promisePaths(entry);
-        const {html, js, css, imports, bundleHref, scripts, importees} = await promiseImports({content: content, entry: entry, dirname: dirname});
+        const {html, js, css, imports, bundleHref, scripts, importees, external} = await promiseImports({content: content, entry: entry, location: dirname, exclude: exclude, include: include});
 
         let index = await promiseHTML(content, imports);
         let app = await promiseHTML(html, imports);
@@ -29,7 +29,7 @@ export default ({entry = null}) => {
         index = await promiseWriteLinks(index, bundleHref, Boolean(js), Boolean(css));
 
         // scripts contains the splitted script files
-        resolve({app: app, index: index, js: js, css: css, scripts: scripts, imports: importees, bundleHref: bundleHref});
+        resolve({app: app, index: index, js: js, css: css, scripts: scripts, imports: importees, bundleHref: bundleHref, external: external});
       } catch (error) {
         throw console.error(error);
       }
