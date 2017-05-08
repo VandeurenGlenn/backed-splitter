@@ -229,7 +229,7 @@ const constructContent = (items = [], location = null, entry = null) => {
         }
         resolve(bundle)
       } catch (error) {
-        reject(error)
+        return console.error(error);
       }
     }
     run()
