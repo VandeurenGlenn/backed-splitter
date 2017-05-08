@@ -202,7 +202,7 @@ const constructContent = (items = [], location = null, entry = null) => {
             // get file content
 
             const source = join(location, isLink ? href : rel);
-            if (filter(isLink ? href : rel) || href.includes('.css')) {
+            if (filter(isLink ? href : rel) || href && href.includes('.css')) {
               content = await promiseContent(source);
               const {contents, scripts} = await scriptToImport(content, source);
               content = contents;
