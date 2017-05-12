@@ -151,7 +151,17 @@ export default class HTMLElement5 {
     if (parent && parent.childNodes) {
       const index = parent.childNodes.indexOf(node);
       parent.childNodes.splice(index, 1);
-    }
+      let afterNode = parent.childNodes[index];
+      if (index === 0 && afterNode && afterNode.nodeName === '#text' && afterNode.value && afterNode.value.length < 4) {
+        parent.childNodes.splice(index, 1);
+      } else if (afterNode && afterNode.nodeName === '#text' && afterNode.value && afterNode.value.length < 4) {
+          let beforeNode = parent.childNodes[index - 1];
+          if (beforeNode && beforeNode.nodeName === '#text' && beforeNode.value && beforeNode.value.length < 4) {
+            parent.childNodes.splice(index, 1)
+          }
+        }
+      }
+
     node.parentNode = undefined;
     return parent.childNodes;
   }
