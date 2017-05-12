@@ -15,6 +15,7 @@ let _set = [];
 let _js = [];
 let verbose = false;
 let filter;
+let isExternal;
 
 const bundle = {
   html: '',
@@ -24,7 +25,11 @@ const bundle = {
   scripts: [],
   importees: {},
   bundleHref: null,
-  external: []
+  externals: {}
+}
+
+const resolvePath = path => {
+  return resolve(path);
 }
 
 const ensureArray = array => {
@@ -88,11 +93,15 @@ const rules = el => {
     if (!exists(_set, current)) {
       // don't push null (when current is null, it isn't an import)
       if (current) {
-        if (!bundle.bundleHref && target.rel && target.rel === 'import' && filter(current)) {
+        if (!bundle.bundleHref && target.rel && target.rel === 'import' && filter(current) && !isExternal(current)) {
           bundle.bundleHref = current;
         }
         _set.push(current);
-        bundle.imports.push(target.outerHTML);
+        if (!isExternal(current)) {
+          bundle.imports.push(target.outerHTML);
+        } else {
+          bundle.externals[current] = target.outerHTML;
+        }
       }
       return target;
     } else if (verbose) {
@@ -107,6 +116,7 @@ const collect = source => {
   });
 }
 let calls = 0;
+
 const handleScript = (target, entry) => {
   return new Promise((resolve, reject) => {
     let imports = [];
@@ -140,7 +150,7 @@ const handleScript = (target, entry) => {
   					id += '.js';
   					hadExt = false;
   				}
-          if (!bundle.scripts[id] && filter(id)) {
+          if (!bundle.scripts[id] && filter(id) && !isExternal(id)) {
     				try {
     					let contents = readFileSync(join(entry, id.replace('./', '')), 'utf-8')
               handleScript(contents, join(entry, dirname(id)));
@@ -179,6 +189,9 @@ const removeScripts = (html, scripts) => {
   html = '';
 
   for (let child of children) {
+    if (child.nodeName === '#text' && child.value && child.value !== 'undefined') {
+      html += child.value;
+    }
     if (child.nodeName !== '#text' && child.tagName !== 'link') {
       html += new HTMLElement5(child).outerHTML;
     }
@@ -202,18 +215,21 @@ const constructContent = (items = [], location = null, entry = null) => {
             // get file content
 
             const source = join(location, isLink ? href : rel);
-            if (filter(isLink ? href : rel) || href && href.includes('.css')) {
+
+            if (filter(isLink ? href : rel) && !isExternal(resolvePath(isLink ? href : rel)) || href && href.includes('.css')) {
               content = await promiseContent(source);
               const {contents, scripts} = await scriptToImport(content, source);
               content = contents;
               if (scripts) {
                 bundle.scripts = scripts;
               }
-            } else if (!filter(isLink ? href : rel)) {
-              bundle.external.push(isLink ? href : rel);
+            } else if (!bundle.externals[isLink ? href : rel] &&
+                      isExternal(resolvePath(isLink ? href : rel))) {
+
+              bundle.externals[isLink ? href : rel] = new Link(item).outerHTML;
             }
 
-            if (isLink) {
+            if (isLink && filter(isLink ? href : rel) && !isExternal(resolvePath(isLink ? href : rel))) {
               const _dirname = await promisePaths(source);
               const collection = await collect(content);
               await constructContent(collection, _dirname, entry);
@@ -250,7 +266,8 @@ const promiseImports = (content = null, location = null, entry = null) => {
   return run();
 }
 
-export default ({content = null, location = null, entry = null, exclude = ['node_modules', 'bower_components/**/*', '**/*.css'], include = []}, verbose = false) => {
+export default ({content = null, location = null, entry = null, exclude = ['node_modules', 'bower_components/**/*', '**/*.css'], include = [], external = ''}, verbose = false) => {
   filter = createFilter({exclude: exclude, include: include});
+  isExternal = createFilter({include: external, exclude: ''});
   return promiseImports(content, location, dirname(entry))
 }
