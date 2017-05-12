@@ -74,13 +74,19 @@ export default class HTMLElement5 {
     const attributes = this.serializeAttributes();
     const tagName = this.value.tagName;
     let endTag = true;
+    let hasSpace = true;
     switch (tagName) {
       case 'link':
       case 'img':
         endTag = false;
         break;
+      case 'template':
+      case 'body':
+      case 'html':
+      case 'script':
+        hasSpace = false;
     }
-    return `<${tagName}${attributes}>${this.innerHTML ? `\n  ${this.innerHTML}\n` : ''}${endTag ? `</${tagName}>` : ''}`
+    return `<${tagName}${attributes}>${this.innerHTML ? `\n    ${this.innerHTML}\n${hasSpace ? '  ' : ''}` : ''}${endTag ? `</${tagName}>` : ''}`;
   }
 
   get attributes() {
