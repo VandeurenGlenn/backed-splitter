@@ -17,16 +17,7 @@ let verbose = false;
 let filter;
 let isExternal;
 
-const bundle = {
-  html: '',
-  js: '',
-  css: '',
-  imports: [],
-  scripts: [],
-  importees: {},
-  bundleHref: null,
-  externals: {}
-}
+let bundle;
 
 const resolvePath = path => {
   return resolve(path);
@@ -181,19 +172,24 @@ const handleScript = (target, entry) => {
 const removeScripts = (html, scripts) => {
   // html = '<!DOCTYPE html><html><head></head><body>' + html + '</body></html>';
   const doc = new HTMLElement5(parse(html));
-  let children;
-  for (let script of dom5.queryAll(doc, rules)) {
-    children = doc.removeChild(script);
+  let children = doc.children;
+  const _scripts = dom5.queryAll(doc, rules);
+  if (_scripts.length > 0) {
+    for (let script of _scripts) {
+      children = doc.removeChild(script);
+    }
   }
 
-  html = '';
+  if (children && children.length > 0) {
+    html = '';
 
-  for (let child of children) {
-    if (child.nodeName === '#text' && child.value && child.value !== 'undefined') {
-      html += child.value;
-    }
-    if (child.nodeName !== '#text' && child.tagName !== 'link') {
-      html += new HTMLElement5(child).outerHTML;
+    for (let child of children) {
+      if (child.nodeName === '#text' && child.value && child.value !== 'undefined') {
+        html += child.value;
+      }
+      if (child.nodeName !== '#text' && child.tagName !== 'link') {
+        html += new HTMLElement5(child).outerHTML;
+      }
     }
   }
   return html;
@@ -266,8 +262,21 @@ const promiseImports = (content = null, location = null, entry = null) => {
   return run();
 }
 
-export default ({content = null, location = null, entry = null, exclude = ['node_modules', 'bower_components/**/*', '**/*.css'], include = [], external = ''}, verbose = false) => {
+export default ({content = null, location = null, entry = null, exclude = ['node_modules', 'bower_components/**/*', '**/*.css'], include = '*', external = []}, verbose = false) => {
+  const isDocument = content.includes('<head>');
+  bundle = {
+    html: '',
+    js: '',
+    css: '',
+    imports: [],
+    scripts: [],
+    importees: {},
+    bundleHref: isDocument ? null : 'none',
+    externals: {}
+  }
+  _set = [];
+  _js = [];
   filter = createFilter({exclude: exclude, include: include});
-  isExternal = createFilter({include: external, exclude: ''});
+  isExternal = createFilter({include: external, exclude: exclude});
   return promiseImports(content, location, dirname(entry))
 }

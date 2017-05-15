@@ -13,12 +13,14 @@ const rules = el => {
 }
 
 export default (source, href, js, css) => {
-  let head = dom5.query(new HTMLElement5(source).value, rules);
-  if (css) source = source.replace('</head>', `  <link rel="stylesheet" href="${href.replace('.html', '.css')}">
-  </head>`);
-  source = source.replace('</head>', `  <link rel="import" href="${href}">
-  </head>`);
-  if (js) source = source.replace('</body>', `  <script src="${href.replace('.html', '.js')}"></script>
-  </body>`);
+  if (href && href !== 'none') {
+    let head = dom5.query(new HTMLElement5(source).value, rules);
+    if (css) source = source.replace('</head>', `  <link rel="stylesheet" href="${href.replace('.html', '.css')}">
+    </head>`);
+    source = source.replace('</head>', `  <link rel="import" href="${href}">
+    </head>`);
+    if (js) source = source.replace('</body>', `  <script src="${href.replace('.html', '.js')}"></script>
+    </body>`);
+  }
   return source;
 }
