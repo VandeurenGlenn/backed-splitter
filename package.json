@@ -1,10 +1,10 @@
 {
   "name": "backed-splitter",
-  "version": "1.7.0",
+  "version": "1.7.3",
   "repository": "https://github.com/VandeurenGlenn/backed-crisper.git",
   "author": "Glenn Vandeuren <vandeurenglenn@gmail.com>",
   "scripts": {
-    "deploy": "npm run build && yarn upgrade && npm publish",
+    "deploy": "npm run build && yarn upgrade && npm run test && npm publish",
     "build": "backed -b",
     "test": "mocha"
   },
