@@ -26,11 +26,16 @@ export default ({entry = null, exclude = ['bower_components/**/*', '**/*.css'], 
         let index = await promiseHTML(content, imports);
         let app = await promiseHTML(html, imports);
 
-        index = await promiseWriteLinks(index, bundleHref, Boolean(js), Boolean(css));
+        if (bundleHref && bundleHref !== 'none') {
+          index = await promiseWriteLinks(index, bundleHref, Boolean(js), Boolean(css));
+          index = index.replace(/(?:\r\n|\r|\n\n\n\n|\n\n\n|\n\n)/g, '\n');
+        } else {
+          index = null;
+        }
         // scripts contains the splitted script files
         resolve({
           app: app.replace(/(?:\r\n|\r|\n\n\n\n|\n\n\n|\n\n)/g, '\n'),
-          index: index.replace(/(?:\r\n|\r|\n\n\n\n|\n\n\n|\n\n)/g, '\n'),
+          index: index,
           js: js,
           css: css,
           scripts: scripts,

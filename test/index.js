@@ -8,6 +8,7 @@ describe('backed-splitter test suite', () => {
   it('splitter returns without error', done => {
     splitter({entry: 'test/templates/index.html', exclude: ['**/*.css', '*.json'], external: ['some.js', 'bower_components/**/*']}).then(result => {
       bundle = result;
+      console.log(result);
       done();
     })
   });
@@ -35,6 +36,7 @@ describe('backed-splitter element test suite [default]', () => {
   it('splitter returns without error', done => {
     splitter({entry: 'test/templates/app.html'}).then(result => {
       bundle = result;
+      console.log(result);
       done();
     })
   });
@@ -44,7 +46,7 @@ describe('backed-splitter element test suite [default]', () => {
   });
 
   it('bundle contains expected imports', () => {
-    assert.equal(Object.keys(bundle.imports).length, 0);
+    assert.equal(Object.keys(bundle.imports).length, 2);
   });
 
   it('bundle contains expected scripts', () => {
